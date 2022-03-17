@@ -1,6 +1,13 @@
 // Require the aws-sdk. This is a dev dependency, so if being used
 // outside of a Lambda execution environment, it must be manually installed.
-const { RDSData, RDSDataClient } = require('@aws-sdk/client-rds-data')
+const {
+  RDSDataClient,
+  BatchExecuteStatementCommand,
+  ExecuteStatementCommand,
+  BeginTransactionCommand,
+  CommitTransactionCommand,
+  RollbackTransactionCommand,
+} = require('@aws-sdk/client-rds-data')
 
 // Require sqlstring to add additional escaping capabilities
 const sqlString = require('sqlstring')
@@ -351,8 +358,9 @@ const query = async function (config, ..._args) {
 
   try { // attempt to run the query
     // Capture the result for debugging
-    let result = await (isBatch ? config.RDS.batchExecuteStatement(params)
-      : config.RDS.executeStatement(params))
+
+    let result = await (isBatch ? config.RDS.send(new BatchExecuteStatementCommand(params))
+      : config.RDS.send(new ExecuteStatementCommand(params)))
 
     // Format and return the results
     return formatResults(
@@ -363,8 +371,8 @@ const query = async function (config, ..._args) {
     )
   } catch (e) {
     if (this && this.rollback) {
-      let rollback = await config.RDS.rollbackTransaction(
-        pick(params, ['resourceArn', 'secretArn', 'transactionId']),
+      let rollback = await config.RDS.send(new RollbackTransactionCommand(
+        pick(params, ['resourceArn', 'secretArn', 'transactionId'])),
       )
 
       this.rollback(e, rollback)
@@ -417,8 +425,8 @@ const commit = async (config, queries, rollback) => {
   let results = [] // keep track of results
 
   // Start a transaction
-  const { transactionId } = await config.RDS.beginTransaction(
-    pick(config, ['resourceArn', 'secretArn', 'database']),
+  const { transactionId } = await config.RDS.send(new BeginTransactionCommand(
+    pick(config, ['resourceArn', 'secretArn', 'database'])),
   )
 
   // Add transactionId to the config
@@ -433,8 +441,8 @@ const commit = async (config, queries, rollback) => {
   }
 
   // Commit our transaction
-  const { transactionStatus } = await txConfig.RDS.commitTransaction(
-    pick(config, ['resourceArn', 'secretArn', 'transactionId']),
+  const { transactionStatus } = await txConfig.RDS.send(new CommitTransactionCommand(
+    pick(config, ['resourceArn', 'secretArn', 'transactionId'])),
   )
 
   // Add the transaction status to the results
@@ -528,7 +536,7 @@ const init = (params) => {
 
     // TODO: Put this in a separate module for testing?
     // Create an instance of RDSDataService
-    RDS: new RDSData(options),
+    RDS: new RDSDataClient(options),
 
   } // end config
 
@@ -541,24 +549,24 @@ const init = (params) => {
 
     // Export promisified versions of the RDSDataService methods
     batchExecuteStatement: (args) =>
-      config.RDS.batchExecuteStatement(
-        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args),
+      config.RDS.send(new BatchExecuteStatementCommand(
+        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args)),
       ),
     beginTransaction: (args) =>
-      config.RDS.beginTransaction(
-        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args),
+      config.RDS.send(new BeginTransactionCommand(
+        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args)),
       ),
     commitTransaction: (args) =>
-      config.RDS.commitTransaction(
-        mergeConfig(pick(config, ['resourceArn', 'secretArn']), args),
+      config.RDS.send(new CommitTransactionCommand(
+        mergeConfig(pick(config, ['resourceArn', 'secretArn']), args)),
       ),
     executeStatement: (args) =>
-      config.RDS.executeStatement(
-        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args),
+      config.RDS.send(new ExecuteStatementCommand(
+        mergeConfig(pick(config, ['resourceArn', 'secretArn', 'database']), args)),
       ),
     rollbackTransaction: (args) =>
-      config.RDS.rollbackTransaction(
-        mergeConfig(pick(config, ['resourceArn', 'secretArn']), args),
+      config.RDS.send(new RollbackTransactionCommand(
+        mergeConfig(pick(config, ['resourceArn', 'secretArn']), args)),
       ),
   }
 } // end exports

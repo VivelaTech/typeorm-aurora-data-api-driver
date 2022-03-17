@@ -476,7 +476,7 @@ describe('querying', () => {
       resourceArn: 'resourceArn',
       database: 'db',
       RDS: {
-        executeStatement: (params) => {
+        send: (params) => {
           // capture the parameters for testing
           parameters = params
           return new Promise((resolve) => resolve(require('./test/sample-query-response.json')))
@@ -484,7 +484,7 @@ describe('querying', () => {
       },
     }
 
-    test('simple query', async () => {
+    test('simple query with ExecuteStatementCommand Input', async () => {
       let result = await query(config, 'SELECT * FROM table WHERE id < :id', { id: 3 })
 
       expect(result).toEqual({
@@ -493,7 +493,7 @@ describe('querying', () => {
           [2, 'Category 2', 'Description of Category 2', '2019-11-12 22:17:11', '2019-11-12 22:21:36', null],
         ],
       })
-      expect(parameters).toEqual({
+      expect(parameters.input).toEqual({
         secretArn: 'secretArn',
         resourceArn: 'resourceArn',
         database: 'db',
