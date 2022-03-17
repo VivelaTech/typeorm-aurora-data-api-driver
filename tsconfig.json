@@ -13,7 +13,8 @@
     "declarationDir": "dist/types",
     "outDir": "dist/lib",
     "typeRoots": ["node_modules/@types"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "importHelpers": true
   },
   "include": ["src", "test"]
 }

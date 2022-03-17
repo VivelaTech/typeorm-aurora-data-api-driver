@@ -15,6 +15,17 @@
     "import/core-modules": ["aws-sdk", "aws-lambda", "typeorm", "typeorm/metadata/ColumnMetadata", "reflect-metadata"]
   },
   "rules": {
+    "array-callback-return": ["off"],
+    "no-use-before-define": ["off"],
+    "prefer-const": ["off"],
+    "global-require": ["off"],
+    "no-underscore-dangle": ["off"],
+    "no-shadow": ["off"],
+    "no-return-await": ["off"],
+    "function-paren-newline": ["off"],
+    "implicit-arrow-linebreak": ["off"],
+    "no-plusplus": ["off"],
+    "no-nested-ternary": ["off"],
     "@typescript-eslint/semi": ["error", "never"],
     "@typescript-eslint/member-delimiter-style": ["error", {
       "multiline": {
@@ -34,7 +45,7 @@
     "no-restricted-syntax": "off",
     "import/prefer-default-export": "off",
     "object-curly-newline": ["error", { "consistent": true }],
-    "import/no-extraneous-dependencies": ["error", { "devDependencies": ["**/*.test.ts", "**/*.spec.ts"] }],
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": ["**/*.test.ts", "**/*.spec.ts", "**/*.test.js", "**/rollup.config.ts"] }],
     "no-await-in-loop": "off",
     "prefer-destructuring": "off",
     "arrow-body-style": "warn",
